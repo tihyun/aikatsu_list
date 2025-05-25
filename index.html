@@ -1,61 +1,326 @@
-import React, { useState } from 'react';
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>アイカツ! カード리スト</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9fafb;
+      color: #333;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
 
-export default function CardList() {
-  // 카테고리 초기 상태 (이름과 열림 여부)
-  const [categories, setCategories] = useState([
-    { id: 1, name: '카테고리 1', isOpen: true },
-    { id: 2, name: '카테고리 2', isOpen: false },
-  ]);
+    h1 {
+      text-align: center;
+      color: #111827;
+    }
 
-  // 각 카테고리 별 카드 데이터 예시
-  const cards = {
-    1: ['카드 A', '카드 B'],
-    2: ['카드 C', '카드 D'],
-  };
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
 
-  // 카테고리 열기/닫기 토글 함수
-  const toggleCategory = (id) => {
-    setCategories(categories.map(cat => 
-      cat.id === id ? {...cat, isOpen: !cat.isOpen} : cat
-    ));
-  };
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+    }
 
-  // 카테고리 이름 수정 함수
-  const changeCategoryName = (id, newName) => {
-    setCategories(categories.map(cat => 
-      cat.id === id ? {...cat, name: newName} : cat
-    ));
-  };
+    button {
+      padding: 10px 16px;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
 
-  return (
-    <div>
-      {categories.map(cat => (
-        <div key={cat.id} style={{ marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            {/* 접기/펼치기 버튼 */}
-            <button onClick={() => toggleCategory(cat.id)}>
-              {cat.isOpen ? '▼' : '▶'}
-            </button>
+    button:hover {
+      background-color: #1d4ed8;
+    }
 
-            {/* 카테고리 이름 인풋 (수정 가능) */}
-            <input 
-              type="text" 
-              value={cat.name} 
-              onChange={(e) => changeCategoryName(cat.id, e.target.value)} 
-              style={{ marginLeft: '0.5rem', fontSize: '1rem' }}
-            />
-          </div>
+    .card-list {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
 
-          {/* 카테고리 열렸을 때 카드 목록 보여주기 */}
-          {cat.isOpen && (
-            <ul>
-              {cards[cat.id].map((card, idx) => (
-                <li key={idx}>{card}</li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
+    .card {
+      position: relative;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.3s ease;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .card img {
+      width: 100%;
+      height: 130px;
+      object-fit: cover;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .card-name {
+      font-weight: bold;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+
+    .owned {
+      background-color: #fbcfe8;
+      border-color: #ec4899;
+    }
+
+    .delete-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: #ef4444;
+      border: none;
+      color: white;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 20px;
+      text-align: center;
+      padding: 0;
+      user-select: none;
+    }
+
+    .delete-btn:hover {
+      background: #b91c1c;
+    }
+
+    label {
+      font-size: 14px;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      font-family: inherit;
+      font-size: 14px;
+      padding: 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      resize: vertical;
+      margin-bottom: 8px;
+    }
+
+    /* 카테고리 스타일 */
+    .category {
+      margin-bottom: 25px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      background: white;
+      padding: 10px;
+    }
+
+    .category-header {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .toggle-btn {
+      font-size: 18px;
+      user-select: none;
+      width: 25px;
+      text-align: center;
+      margin-right: 8px;
+    }
+
+    .category-name-input {
+      font-size: 16px;
+      border: none;
+      border-bottom: 1px solid transparent;
+      outline: none;
+      flex: 1;
+    }
+
+    .category-name-input:focus {
+      border-bottom: 1px solid #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <h1>アイカツ! カードリスト</h1>
+
+  <div class="input-group">
+    <input type="text" id="searchInput" placeholder="카드 이름 검색" oninput="renderCards()" />
+    <label><input type="checkbox" id="filterOwned" onchange="renderCards()" /> 보유한 카드만</label>
+  </div>
+
+  <div id="categoriesContainer"></div>
+
+  <h3>포토카드 추가하기</h3>
+  <div class="input-group">
+    <input type="text" id="nameInput" placeholder="카드 이름" />
+    <input type="text" id="imgInput" placeholder="이미지 URL (선택)" />
+    <input type="text" id="categoryInput" placeholder="카테고리 이름 (선택)" />
+    <button onclick="addCard()">추가</button>
+  </div>
+
+  <h3>여러 장 한꺼번에 추가하기 (한 줄에 이름, 이미지 URL, 카테고리)</h3>
+  <textarea id="bulkInput" rows="5" placeholder="예:
+PZ-064,https://i.postimg.cc/Yv9kT66q/PZ-064.png,카테고리1
+PZ-065,https://i.postimg.cc/abc123.png,카테고리2"></textarea>
+  <button onclick="addMultipleCards()">한꺼번에 추가</button>
+
+<script>
+  const categoriesContainer = document.getElementById('categoriesContainer');
+
+  // 카테고리 데이터 배열 예시: [{name, isOpen, cards: [{name,img,owned}]}]
+  let categories = JSON.parse(localStorage.getItem('categories') || '[]');
+
+  function saveCategories() {
+    localStorage.setItem('categories', JSON.stringify(categories));
+  }
+
+  // 기본 카테고리 없으면 생성 (예: 기본 하나)
+  if(categories.length === 0){
+    categories.push({
+      name: '기본 카테고리',
+      isOpen: true,
+      cards: []
+    });
+  }
+
+  function renderCards() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const filterOwned = document.getElementById('filterOwned').checked;
+
+    categoriesContainer.innerHTML = ''; // 초기화
+
+    categories.forEach((category, catIndex) => {
+      // 카테고리 필터링 할 때, 안에 카드가 하나도 없으면 숨겨도 됨
+      const filteredCards = category.cards.filter(card => {
+        if (filterOwned && !card.owned) return false;
+        if (!card.name.toLowerCase().includes(searchTerm)) return false;
+        return true;
+      });
+
+      if(filteredCards.length === 0){
+        // 필터링 후 카드가 없으면 카테고리도 숨김 (선택 사항)
+        return;
+      }
+
+      // 카테고리 박스
+      const categoryDiv = document.createElement('div');
+      categoryDiv.className = 'category';
+
+      // 카테고리 헤더 (접기/펼치기, 이름 수정 가능)
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'category-header';
+
+      const toggleBtn = document.createElement('div');
+      toggleBtn.className = 'toggle-btn';
+      toggleBtn.textContent = category.isOpen ? '▼' : '▶';
+
+      toggleBtn.onclick = () => {
+        categories[catIndex].isOpen = !categories[catIndex].isOpen;
+        saveCategories();
+        renderCards();
+      };
+
+      const categoryNameInput = document.createElement('input');
+      categoryNameInput.className = 'category-name-input';
+      categoryNameInput.value = category.name;
+      categoryNameInput.oninput = (e) => {
+        categories[catIndex].name = e.target.value;
+        saveCategories();
+      };
+
+      headerDiv.appendChild(toggleBtn);
+      headerDiv.appendChild(categoryNameInput);
+      categoryDiv.appendChild(headerDiv);
+
+      // 카드 리스트
+      if(category.isOpen){
+        const cardListDiv = document.createElement('div');
+        cardListDiv.className = 'card-list';
+
+        filteredCards.forEach((card, cardIndex) => {
+          const cardEl = document.createElement('div');
+          cardEl.className = 'card';
+          if(card.owned) cardEl.classList.add('owned');
+
+          const img = document.createElement('img');
+          img.src = card.img || 'https://via.placeholder.com/200x130?text=No+Image';
+
+          const name = document.createElement('div');
+          name.className = 'card-name';
+          name.textContent = card.name;
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'delete-btn';
+          deleteBtn.textContent = '×';
+          deleteBtn.title = '삭제하기';
+
+          deleteBtn.onclick = (e) => {
+            e.stopPropagation();
+            categories[catIndex].cards.splice(cardIndex, 1);
+            saveCategories();
+            renderCards();
+          };
+
+          cardEl.appendChild(img);
+          cardEl.appendChild(name);
+          cardEl.appendChild(deleteBtn);
+
+          cardEl.onclick = () => {
+            categories[catIndex].cards[cardIndex].owned = !categories[catIndex].cards[cardIndex].owned;
+            saveCategories();
+            renderCards();
+          };
+
+          cardListDiv.appendChild(cardEl);
+        });
+
+        categoryDiv.appendChild(cardListDiv);
+      }
+
+      categoriesContainer.appendChild(categoryDiv);
+    });
+  }
+
+  function addCard() {
+    const nameInput = document.getElementById('nameInput');
+    const imgInput = document.getElementById('imgInput');
+    const categoryInput = document.getElementById('categoryInput');
+
+    const name = nameInput.value.trim();
+    const img = imgInput.value.trim();
+    const categoryName = categoryInput.value.trim() || '기본 카테고리';
+
+    if(!name){
+      alert('카드 이름을 입력해주세요.');
+      return;
+    }
+
+    // 카테고리 찾기 or

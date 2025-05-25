@@ -62,6 +62,13 @@
       flex-direction: column;
       align-items: center;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.3s ease;
+    }
+
+    .card:hover {
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
     .card img {
@@ -78,19 +85,26 @@
       text-align: center;
     }
 
-    .card input[type="checkbox"] {
-      margin-top: 5px;
-      transform: scale(1.2);
-    }
-
     .owned {
-      background-color: #dcfce7;
+      background-color: #fbcfe8;  /* 연한 핑크색 */
+      border-color: #ec4899;      /* 진한 핑크색 */
     }
 
     label {
       font-size: 14px;
       display: block;
       margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      font-family: inherit;
+      font-size: 14px;
+      padding: 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      resize: vertical;
+      margin-bottom: 8px;
     }
   </style>
 </head>
@@ -110,6 +124,12 @@
     <input type="text" id="imgInput" placeholder="이미지 URL (선택)" />
     <button onclick="addCard()">추가</button>
   </div>
+
+  <h3>여러 장 한꺼번에 추가하기 (한 줄에 이름, 이미지 URL)</h3>
+  <textarea id="bulkInput" rows="5" placeholder="예:
+PZ-064,https://i.postimg.cc/Yv9kT66q/PZ-064.png
+PZ-065,https://i.postimg.cc/abc123.png"></textarea>
+  <button onclick="addMultipleCards()">한꺼번에 추가</button>
 
 <script>
   const cardListEl = document.getElementById('cardList');
@@ -139,18 +159,14 @@
       name.className = 'card-name';
       name.textContent = card.name;
 
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = card.owned;
-      checkbox.onchange = () => {
-        cards[index].owned = checkbox.checked;
+      cardEl.appendChild(img);
+      cardEl.appendChild(name);
+
+      cardEl.onclick = () => {
+        cards[index].owned = !cards[index].owned;
         saveCards();
         renderCards();
       };
-
-      cardEl.appendChild(img);
-      cardEl.appendChild(name);
-      cardEl.appendChild(checkbox);
 
       cardListEl.appendChild(cardEl);
     });
@@ -173,6 +189,37 @@
 
     nameInput.value = '';
     imgInput.value = '';
+  }
+
+  function addMultipleCards() {
+    const bulkInput = document.getElementById('bulkInput').value.trim();
+    if (!bulkInput) {
+      alert('데이터를 입력해주세요.');
+      return;
+    }
+
+    const lines = bulkInput.split('\n');
+    let count = 0;
+    lines.forEach(line => {
+      const parts = line.split(',');
+      if (parts.length >= 1) {
+        const name = parts[0].trim();
+        const img = parts[1] ? parts[1].trim() : '';
+        if (name) {
+          cards.push({ name, img, owned: false });
+          count++;
+        }
+      }
+    });
+
+    if (count > 0) {
+      saveCards();
+      renderCards();
+      alert(count + '개의 카드를 추가했어요!');
+      document.getElementById('bulkInput').value = '';
+    } else {
+      alert('올바른 형식으로 입력해주세요.');
+    }
   }
 
   renderCards();
